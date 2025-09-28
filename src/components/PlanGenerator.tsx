@@ -1,6 +1,4 @@
 import React from 'react';
-import DailyItinerary from './DailyItinerary';
-import Recommendations from './Recommendations';
 
 interface Plan {
   tripTitle: string;
@@ -28,8 +26,7 @@ const PlanGenerator: React.FC<PlanGeneratorProps> = ({ plan, isGenerating }) => 
           </div>
 
           <div className="space-y-8">
-            <DailyItinerary itinerary={plan.dailyItinerary} />
-            <Recommendations title="추천 호텔" items={plan.hotelRecommendations} />
+            <p>여행 계획 상세 내용이 여기에 표시됩니다.</p>
           </div>
         </div>
       )}

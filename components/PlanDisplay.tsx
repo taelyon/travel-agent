@@ -118,6 +118,14 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, startDate, endDate, cou
       </header>
       
       <section className="py-8">
+        <div className="p-4 bg-gray-100 rounded-lg">
+            <h2 className="text-xl font-bold text-gray-800 mb-2">여행 개요</h2>
+            <p className="text-gray-800">{plan.tripOverview}</p>
+            <p className="mt-2 font-semibold text-gray-700">{plan.estimatedCost}</p>
+        </div>
+      </section>
+
+      <section className="py-8">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
           <CalendarIcon className="w-7 h-7 sm:w-8 sm:h-8 text-rose-500" />
           상세 일정

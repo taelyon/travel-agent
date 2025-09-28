@@ -40,6 +40,8 @@ export interface HotelRecommendation extends Recommendation {
 
 export interface TravelPlan {
   tripTitle: string;
+  tripOverview: string;
+  estimatedCost: string;
   dailyItinerary: DailyPlan[];
   hotelRecommendations: HotelRecommendation[];
   transportationGuide: string;
