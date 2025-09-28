@@ -11,14 +11,21 @@ export const COUNTRY_DESTINATIONS: Record<Country, Destination[]> = {
     Destination.DA_NANG,
     Destination.HO_CHI_MINH,
     Destination.PHU_QUOC,
+    Destination.NHATRANG,
+  ],
+  [Country.KOREA]: [
+    Destination.SEOUL,
+    Destination.BUSAN,
+    Destination.JEJU,
   ],
 };
 
-export const COUNTRIES: Country[] = [Country.JAPAN, Country.VIETNAM];
+export const COUNTRIES: Country[] = [Country.JAPAN, Country.VIETNAM, Country.KOREA];
 
 export const DESTINATIONS: Destination[] = [
   ...COUNTRY_DESTINATIONS[Country.JAPAN],
   ...COUNTRY_DESTINATIONS[Country.VIETNAM],
+  ...COUNTRY_DESTINATIONS[Country.KOREA],
 ];
 
 export const DESTINATION_AIRPORTS: { [key in Destination]: string } = {
@@ -28,5 +35,9 @@ export const DESTINATION_AIRPORTS: { [key in Destination]: string } = {
   [Destination.HANOI]: 'HAN',       // 노이바이 국제공항
   [Destination.DA_NANG]: 'DAD',     // 다낭 국제공항
   [Destination.HO_CHI_MINH]: 'SGN', // 탄손낫 국제공항
-  [Destination.PHU_QUOC]: 'PQC',     // 푸꾸옥 국제공항
+  [Destination.PHU_QUOC]: 'PQC',    // 푸꾸옥 국제공항
+  [Destination.NHATRANG]: 'CXR',    // 깜란 국제공항
+  [Destination.SEOUL]: 'ICN',       // 인천 국제공항
+  [Destination.BUSAN]: 'PUS',       // 김해 국제공항
+  [Destination.JEJU]: 'CJU',        // 제주 국제공항
 };

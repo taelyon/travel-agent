@@ -6,11 +6,16 @@ export enum Destination {
   DA_NANG = '다낭',
   HO_CHI_MINH = '호치민',
   PHU_QUOC = '푸꾸옥',
+  NHATRANG = '나트랑',
+  SEOUL = '서울',
+  BUSAN = '부산',
+  JEJU = '제주',
 }
 
 export enum Country {
   JAPAN = '일본',
   VIETNAM = '베트남',
+  KOREA = '한국',
 }
 
 export interface ScheduleItem {
