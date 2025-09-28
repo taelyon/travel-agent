@@ -3,7 +3,7 @@ import path from 'path';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { put, list, del } from '@vercel/blob';
 import type { SavedPlan } from '../types';
-import { Country } from '../types';
+import { Country } from '../types.js';
 
 const AI_GENERATION_ERROR = 'AI 여행 계획을 생성하는 데 실패했습니다. 잠시 후 다시 시도해 주세요.';
 const MISSING_API_KEY_ERROR = '서버에 API 키가 설정되지 않았습니다.';
