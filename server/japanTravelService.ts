@@ -241,7 +241,7 @@ export async function handleJapanTravelAction(action: string, payload: any) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const modelName = process.env.GENERATIVE_MODEL || 'gemini-1.5-flash-latest';
+    const modelName = process.env.GENERATIVE_MODEL || 'gemini-1.5-flash';
 
     const model = genAI.getGenerativeModel({
       model: modelName,
