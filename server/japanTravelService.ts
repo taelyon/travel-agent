@@ -241,45 +241,10 @@ export async function handleJapanTravelAction(action: string, payload: any) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-
-    // 동적으로 generateContent를 지원하는 모델을 찾습니다.
-    let selectedModelName: string | null = null;
-
-    try {
-      // SDK에 listModels 메서드가 없을 수 있으므로 타입 검사 회피와 런타임 존재 여부 확인을 모두 수행합니다.
-      const maybeListFn = (genAI as any).listModels;
-      if (typeof maybeListFn === 'function') {
-        const listed = await maybeListFn.call(genAI);
-        const models = Array.isArray(listed?.models) ? listed.models : listed;
-
-        for (const m of models) {
-          const supports = m.supportedMethods || m.methods || m.supports || [];
-          const name = m.name || m.id || m.model || m.modelId;
-          if (!name) continue;
-          if (Array.isArray(supports) && supports.includes('generateContent')) {
-            selectedModelName = name;
-            break;
-          }
-        }
-      } else {
-        console.warn('[genai] listModels 메서드가 SDK에 없습니다. 동적 모델 검색을 건너뜁니다.');
-      }
-    } catch (err) {
-      console.warn('[genai] 모델 목록 조회 실패:', err);
-    }
-
-    // 환경변수로 모델명을 강제할 수 있음
-    if (!selectedModelName) {
-      selectedModelName = process.env.GENERATIVE_MODEL || null;
-    }
-
-    if (!selectedModelName) {
-      console.error('[genai] 사용할 수 있는 모델을 찾지 못했습니다.');
-      return { status: 500, body: { error: '사용 가능한 AI 모델을 찾을 수 없습니다. 서버 환경변수 GENERATIVE_MODEL로 모델명을 지정하거나, API 키 권한을 확인하세요.' } };
-    }
+    const modelName = process.env.GENERATIVE_MODEL || 'gemini-1.5-flash-latest';
 
     const model = genAI.getGenerativeModel({
-      model: selectedModelName,
+      model: modelName,
       safetySettings: [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
         { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
