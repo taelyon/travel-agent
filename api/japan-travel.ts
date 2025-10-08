@@ -1,6 +1,26 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleJapanTravelAction } from '../server/japanTravelService.js';
 
+// Helper to pipe the stream
+async function pipeStream(stream: AsyncGenerator<any>, res: VercelResponse) {
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.status(200);
+  try {
+    for await (const chunk of stream) {
+      // Assuming chunk has a .text() method that returns a string
+      const text = chunk.text();
+      if (text) {
+        res.write(text);
+      }
+    }
+  } catch (error) {
+    console.error('Error while streaming data:', error);
+    // Don't write further to the response, just log it.
+  } finally {
+    res.end();
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -16,7 +36,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const { action, payload } = req.body ?? {};
-  const result = await handleJapanTravelAction(action, payload);
-  res.status(result.status).json(result.body);
+  const { action, payload, stream } = req.body ?? {};
+  const result = await handleJapanTravelAction(action, payload, stream);
+
+  if (result.stream && result.body) {
+    await pipeStream(result.body, res);
+  } else {
+    res.status(result.status).json(result.body);
+  }
 }

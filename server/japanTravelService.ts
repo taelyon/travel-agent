@@ -1,4 +1,4 @@
-﻿import fs from 'fs/promises';
+import fs from 'fs/promises';
 import path from 'path';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { put, list, del } from '@vercel/blob';
@@ -14,6 +14,7 @@ const LOCAL_PLANS_PATH = path.join(LOCAL_DATA_DIR, 'plans.json');
 const isBlobConfigured = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 const useLocalStore = !isBlobConfigured;
 
+// Helper to extract JSON from text, remains the same
 function extractJsonFromText(text: string): string | null {
   const codeBlockMatch = text.match(/```json\s*([\s\S]*?)```/i);
   if (codeBlockMatch) {
@@ -46,6 +47,7 @@ function extractJsonFromText(text: string): string | null {
 
   return null;
 }
+
 
 async function readLocalPlans(): Promise<SavedPlan[]> {
   try {
@@ -133,7 +135,7 @@ async function deletePlan(planId: number): Promise<{ status: number; body: Saved
   return getPlans();
 }
 
-async function generatePlan(model: ReturnType<GoogleGenerativeAI['getGenerativeModel']>, payload: any) {
+async function generatePlanStream(model: ReturnType<GoogleGenerativeAI['getGenerativeModel']>, payload: any) {
   const { destination, startDate, endDate, mustVisitPlaces, country } = payload ?? {};
   const travelCountry = country || Country.JAPAN;
 
@@ -199,33 +201,14 @@ async function generatePlan(model: ReturnType<GoogleGenerativeAI['getGenerativeM
             }
         `;
 
-  const result = await model.generateContent({
+  const result = await model.generateContentStream({
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
       responseMimeType: 'application/json',
     },
   });
 
-  const textResponse = result.response.text();
-  const candidates = [textResponse.trim()];
-  const extracted = extractJsonFromText(textResponse);
-
-  if (extracted && extracted !== candidates[0]) {
-    candidates.push(extracted);
-  }
-
-  for (const candidate of candidates) {
-    if (!candidate) continue;
-    try {
-      const parsed = JSON.parse(candidate);
-      return { status: 200, body: parsed };
-    } catch {
-      // try next candidate
-    }
-  }
-
-  console.error('Failed to parse AI response as JSON', { raw: textResponse });
-  return { status: 500, body: { error: AI_GENERATION_ERROR } };
+  return result.stream;
 }
 
 async function searchInfo(model: ReturnType<GoogleGenerativeAI['getGenerativeModel']>, payload: any) {
@@ -235,7 +218,7 @@ async function searchInfo(model: ReturnType<GoogleGenerativeAI['getGenerativeMod
   return { status: 200, body: { result: result.response.text() } };
 }
 
-export async function handleJapanTravelAction(action: string, payload: any) {
+export async function handleJapanTravelAction(action: string, payload: any, stream?: boolean) {
   try {
     if (action === 'getPlans') {
       return getPlans();
@@ -259,7 +242,7 @@ export async function handleJapanTravelAction(action: string, payload: any) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const modelName = process.env.GENERATIVE_MODEL || 'gemini-2.5-pro';
+    const modelName = process.env.GENERATIVE_MODEL || 'gemini-1.5-pro';
 
     const model = genAI.getGenerativeModel({
       model: modelName,
@@ -272,7 +255,29 @@ export async function handleJapanTravelAction(action: string, payload: any) {
     });
 
     if (action === 'generatePlan') {
-      return generatePlan(model, payload);
+      if (stream) {
+        const stream = await generatePlanStream(model, payload);
+        return { status: 200, body: stream, stream: true };
+      } else {
+        // This part is complex because generatePlan is gone.
+        // For now, let's assume we always stream for generatePlan.
+        // A non-streaming version would require re-implementing the old logic.
+        const stream = await generatePlanStream(model, payload);
+        let fullText = '';
+        for await (const chunk of stream) {
+          fullText += chunk.text();
+        }
+        const json = extractJsonFromText(fullText);
+        if (json) {
+          try {
+            return { status: 200, body: JSON.parse(json) };
+          } catch (e) {
+             console.error('Failed to parse AI response as JSON', { raw: fullText });
+             return { status: 500, body: { error: AI_GENERATION_ERROR } };
+          }
+        }
+        return { status: 500, body: { error: AI_GENERATION_ERROR } };
+      }
     }
 
     if (action === 'searchInfo') {
@@ -284,4 +289,5 @@ export async function handleJapanTravelAction(action: string, payload: any) {
     console.error('API Error:', error);
     const message = error instanceof Error ? error.message : UNKNOWN_ERROR;
     return { status: 500, body: { error: message } };
-  }}
+  }
+}

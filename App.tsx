@@ -2,14 +2,28 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { COUNTRIES, COUNTRY_DESTINATIONS } from './constants';
 import { Destination, Country } from './types';
 import type { TravelPlan, SavedPlan } from './types';
-import { generateTravelPlan, searchInformation } from './services/geminiService';
+import { generateTravelPlanStream, searchInformation } from './services/geminiService';
 import { getSavedPlans, savePlan, deletePlan as apiDeletePlan } from './services/planService';
 import LoadingSpinner from './components/LoadingSpinner';
 import PlanDisplay from './components/PlanDisplay';
 import SavedPlansModal from './components/SavedPlansModal';
 import SearchResultDisplay from './components/SearchResultDisplay';
+import StreamingPlanDisplay from './components/StreamingPlanDisplay';
 
 const today = new Date().toISOString().split('T')[0];
+
+function extractJsonFromText(text: string): string | null {
+  const match = text.match(/```json\s*([\s\S]*?)\s*```/);
+  if (match && match[1]) {
+    return match[1];
+  }
+  const firstBrace = text.indexOf('{');
+  const lastBrace = text.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    return text.substring(firstBrace, lastBrace + 1);
+  }
+  return null;
+}
 
 function App() {
   const [country, setCountry] = useState<Country>(COUNTRIES[0]);
@@ -21,12 +35,15 @@ function App() {
   const [plan, setPlan] = useState<TravelPlan | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [streamingPlanContent, setStreamingPlanContent] = useState('');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResult, setSearchResult] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [savedPlans, setSavedPlans] = useState<SavedPlan[]>([]);
   const [isSavedPlansModalOpen, setIsSavedPlansModalOpen] = useState(false);
+
   const normalizeSavedPlans = (plans: SavedPlan[]): SavedPlan[] =>
     plans.map((savedPlan) => ({
       ...savedPlan,
@@ -39,6 +56,7 @@ function App() {
       setDestination(null);
     }
   }, [country, destination]);
+
   useEffect(() => {
     const fetchPlans = async () => {
       try {
@@ -102,6 +120,7 @@ function App() {
     setSearchError(null);
     setError(null);
     setIsSavedPlansModalOpen(false);
+    setStreamingPlanContent('');
   };
 
   const handleAddMustVisit = () => {
@@ -124,17 +143,44 @@ function App() {
         setError("종료일은 시작일보다 빠를 수 없습니다.");
         return;
     }
+    
     setIsLoading(true);
     setError(null);
     setPlan(null);
-    try {
-      const generatedPlan = await generateTravelPlan(country, destination, startDate, endDate, mustVisitPlaces);
-      setPlan(generatedPlan);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : '알 수 없는 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
+    setStreamingPlanContent('');
+
+    generateTravelPlanStream(
+      country,
+      destination,
+      startDate,
+      endDate,
+      mustVisitPlaces,
+      (chunk) => {
+        setStreamingPlanContent(prev => prev + chunk);
+      },
+      (error) => {
+        setError(error.message || '스트리밍 중 오류가 발생했습니다.');
+        setIsLoading(false);
+      },
+      () => {
+        setStreamingPlanContent(currentContent => {
+          const jsonString = extractJsonFromText(currentContent);
+          if (jsonString) {
+            try {
+              const parsedPlan = JSON.parse(jsonString);
+              setPlan(parsedPlan);
+            } catch (e) {
+              console.error("Failed to parse streamed JSON:", e);
+              setError('AI 응답을 파싱하는 데 실패했습니다. 생성된 텍스트를 확인해주세요.');
+            }
+          } else {
+            setError('AI 응답에서 유효한 JSON을 찾지 못했습니다.');
+          }
+          setIsLoading(false);
+          return currentContent;
+        });
+      }
+    );
   }, [country, destination, startDate, endDate, mustVisitPlaces]);
   
   const handleSearch = useCallback(async () => {
@@ -176,6 +222,65 @@ function App() {
   const PlusIcon: React.FC<{className?: string}> = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>;
   const XIcon: React.FC<{className?: string}> = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>;
   const FolderIcon: React.FC<{className?: string}> = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>;
+
+  const renderMainContent = () => {
+    if (error) {
+      return (
+        <div className="w-full text-center p-8 bg-red-50 border border-red-200 rounded-2xl shadow-lg">
+          <h2 className="text-2xl font-bold mb-4 text-red-700">😢 오류가 발생했습니다</h2>
+          <p className="text-red-600 mb-6">{error}</p>
+          <button 
+            onClick={() => {
+              setError(null);
+              setStreamingPlanContent(''); // Clear content as well
+            }} 
+            className="bg-red-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-600 transition-colors shadow-md"
+          >
+            닫기
+          </button>
+        </div>
+      );
+    }
+
+    if (searchResult || searchError || isSearching) {
+      return (
+        <div className="w-full">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold">검색 결과</h2>
+            <button onClick={() => { setSearchResult(null); setSearchError(null); }} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm font-semibold w-full sm:w-auto">
+                계획으로 돌아가기
+            </button>
+          </div>
+          {isSearching && <LoadingSpinner />}
+          {searchError && <p className="text-red-500">{searchError}</p>}
+          {searchResult && <SearchResultDisplay result={searchResult} />}
+        </div>
+      );
+    }
+
+    if (isLoading) {
+      if (streamingPlanContent) {
+        return <StreamingPlanDisplay content={streamingPlanContent} />;
+      }
+      return <LoadingSpinner />;
+    }
+
+    if (plan && destination) {
+      return <PlanDisplay plan={plan} country={country} destination={destination} startDate={startDate} endDate={endDate} onSavePlan={handleSavePlan} />;
+    }
+    
+    if (streamingPlanContent) {
+        return <StreamingPlanDisplay content={streamingPlanContent} />;
+    }
+
+    return (
+      <div className="text-center text-gray-500 px-4">
+        <div className="text-5xl sm:text-6xl mb-4">🗺️</div>
+        <h2 className="text-xl sm:text-2xl font-bold mb-2">여행 계획을 생성해보세요!</h2>
+        <p className="text-base">옵션을 선택하고 버튼을 누르면 AI가 맞춤 여행을 설계해 드립니다.</p>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 text-gray-800">
@@ -321,34 +426,12 @@ function App() {
               >
                 {isLoading ? '계획 생성 중...' : '나만의 여행 계획 만들기'}
               </button>
-              {error && <p className="text-red-500 text-center">{error}</p>}
+              
             </div>
           </aside>
 
           <section className="lg:col-span-8 lg:bg-white/50 lg:p-6 rounded-2xl min-h-[60vh] flex items-center justify-center">
-             {searchResult || searchError || isSearching ? (
-                 <div className="w-full">
-                    <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
-                      <h2 className="text-xl sm:text-2xl font-bold">검색 결과</h2>
-                      <button onClick={() => { setSearchResult(null); setSearchError(null); }} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm font-semibold w-full sm:w-auto">
-                          계획으로 돌아가기
-                      </button>
-                    </div>
-                    {isSearching && <LoadingSpinner />}
-                    {searchError && <p className="text-red-500">{searchError}</p>}
-                    {searchResult && <SearchResultDisplay result={searchResult} />}
-                 </div>
-             ) : isLoading ? (
-              <LoadingSpinner />
-            ) : plan && destination ? (
-              <PlanDisplay plan={plan} country={country} destination={destination} startDate={startDate} endDate={endDate} onSavePlan={handleSavePlan} />
-            ) : (
-              <div className="text-center text-gray-500 px-4">
-                <div className="text-5xl sm:text-6xl mb-4">🗺️</div>
-                <h2 className="text-xl sm:text-2xl font-bold mb-2">여행 계획을 생성해보세요!</h2>
-                <p className="text-base">옵션을 선택하고 버튼을 누르면 AI가 맞춤 여행을 설계해 드립니다.</p>
-              </div>
-            )}
+            {renderMainContent()}
           </section>
         </div>
       </main>
