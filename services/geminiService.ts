@@ -1,6 +1,6 @@
 import { Destination, Country, type TravelPlan } from '../types';
 
-const API_BASE_URL = '/api/japan-travel';
+const API_BASE_URL = '/api/travel';
 
 /**
  * A generic function to make requests to the server API.
