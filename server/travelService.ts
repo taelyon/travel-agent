@@ -171,7 +171,7 @@ async function generatePlanStream(model: ReturnType<GoogleGenerativeAI['getGener
             8.  **교통편:** 각 일정(schedule) 항목마다 이동을 위한 구체적인 교통편 정보(예: 지하철 노선, 버스 번호, 도보 등), 예상 소요 시간, 예상 요금을 'transportation' 필드에 상세히 작성해주세요.
             9.  **일정 내용:** 각 활동 및 방문 장소에 대한 구체적인 설명, 예상 소요 시간, 팁 등을 **다섯 문장 이상**으로 아주 상세하게 작성해주세요.
             10. **동선:** 논리적이고 효율적인 동선으로 일정을 계획하고, 모든 필수 방문 장소를 포함해야 합니다.
-            11. **교통편 가이드 (transportationGuide):** 출발지와 도착지가 국내(한국) 도시일 경우, 주요 교통수단(KTX, 버스, 자가용, 항공편 등)별 장단점, 예상 소요 시간, 예상 비용을 비교 분석하여 추천 교통수단을 포함한 내용을 **객체 배열**로 구조화해주세요. 각 객체는 method(교통수단 이름), pros(장점), cons(단점), duration(소요시간), cost(비용), recommended(추천 여부, boolean) 필드를 포함해야 합니다. 국제선일 경우, 이 필드는 null로 설정해주세요.
+            11. **교통편 가이드 (transportationGuide):** 출발지와 도착지가 국내(한국) 도시일 경우, 주요 교통수단(KTX, 버스, 자가용, 항공편 등)별 이용요령, 예상 소요 시간, 예상 비용을 비교 분석하여 추천 교통수단을 포함한 내용을 **객체 배열**로 구조화해주세요. 각 객체는 method(교통수단 이름), tips(이용요령), duration(소요시간), cost(비용), recommended(추천 여부, boolean) 필드를 포함해야 합니다. 국제선일 경우, 이 필드는 null로 설정해주세요.
 
             12. **출력 형식:** 결과는 다른 설명이나 markdown 포맷 없이, 아래와 같은 순수한 JSON 형식으로만 반환해주세요.
 
@@ -197,8 +197,7 @@ async function generatePlanStream(model: ReturnType<GoogleGenerativeAI['getGener
               "transportationGuide": [
                 {
                   "method": "KTX/SRT",
-                  "pros": "가장 빠르고 정시성이 높으며, 서울 주요 거점에서 출발하여 부산역 도착 후 대중교통 연계가 매우 편리합니다.",
-                  "cons": "다른 교통수단에 비해 비용이 높은 편이며, 주말이나 명절에는 사전 예매가 필수적입니다.",
+                  "tips": "가장 빠르고 시간을 정확하게 지킬 수 있는 방법입니다. 주말이나 명절에는 미리 예매하는 것이 좋으며, 역에서 바로 지하철 등 다른 대중교통으로 환승하기 편리합니다.",
                   "duration": "약 2시간 30분 ~ 3시간",
                   "cost": "약 59,800원 (편도, 일반실 기준)",
                   "recommended": true

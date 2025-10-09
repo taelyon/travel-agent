@@ -45,8 +45,7 @@ export interface HotelRecommendation extends Recommendation {
 
 export interface TransportationGuideItem {
   method: string;
-  pros: string;
-  cons: string;
+  tips: string;
   duration: string;
   cost: string;
   recommended: boolean;

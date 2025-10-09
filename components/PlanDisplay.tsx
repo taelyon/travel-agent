@@ -204,33 +204,22 @@ const TransportationGuide: React.FC<{ guide: TravelPlan['transportationGuide'] }
   }
 
   return (
-    <div className="space-y-6">
-      {guide.map((item, index) => (
-        <div key={index} className={`p-4 rounded-lg border-2 ${item.recommended ? 'border-rose-500 bg-rose-50' : 'border-gray-200 bg-white'}`}>
-          <h3 className="text-xl font-bold text-gray-800 flex items-center">
-            {item.method}
-            {item.recommended && <span className="ml-3 text-sm font-semibold text-white bg-rose-500 px-2 py-0.5 rounded-full">추천</span>}
-          </h3>
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded-r-lg">
-              <h4 className="font-semibold text-green-800">👍 장점</h4>
-              <p className="text-green-700 mt-1">{item.pros}</p>
+    <div className="sm:bg-white sm:p-6 sm:rounded-xl sm:shadow-md sm:border sm:border-gray-200">
+      <ul className="space-y-4">
+        {guide.map((item, index) => (
+          <li key={index} className={`p-3 rounded-lg transition-colors ${item.recommended ? 'bg-rose-50 border border-rose-200' : 'border-b border-gray-200 last:border-b-0'}`}>
+            <h4 className="font-bold text-lg text-gray-800 flex items-center">
+              {item.method}
+              {item.recommended && <span className="ml-3 text-xs font-semibold text-white bg-rose-500 px-2 py-0.5 rounded-full">추천</span>}
+            </h4>
+            <p className="text-gray-600 mt-2 whitespace-pre-wrap text-sm sm:text-base">{item.tips}</p>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                <p><span className="font-semibold">소요시간:</span> {item.duration}</p>
+                <p><span className="font-semibold">비용:</span> {item.cost}</p>
             </div>
-            <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded-r-lg">
-              <h4 className="font-semibold text-red-800">👎 단점</h4>
-              <p className="text-red-700 mt-1">{item.cons}</p>
-            </div>
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-r-lg">
-              <h4 className="font-semibold text-blue-800">🕒 소요시간</h4>
-              <p className="text-blue-700 mt-1">{item.duration}</p>
-            </div>
-            <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded-r-lg">
-              <h4 className="font-semibold text-yellow-800">💰 비용</h4>
-              <p className="text-yellow-700 mt-1">{item.cost}</p>
-            </div>
-          </div>
-        </div>
-      ))}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
