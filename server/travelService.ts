@@ -141,7 +141,7 @@ async function generatePlanStream(model: ReturnType<GoogleGenerativeAI['getGener
     ? `사용자가 반드시 방문하고 싶어 하는 장소는 다음과 같습니다:\n- ${mustVisitPlaces.join('\n- ')}\n이 장소들을 반드시 일정에 포함시켜 주세요.`
     : '사용자가 지정한 필수 방문 장소는 없습니다.';
 
-  const hotelInstruction = `\n**숙소 추천에 대한 요청:**\n- 교통이 편리한 중심가에 위치한 호텔을 추천해주세요.\n- 가성비를 중요한 요소로 고려해주세요.`;
+  const hotelInstruction = `\n**숙소 추천에 대한 요청:**\n- 숙소는 가성비 좋은 호텔과 럭셔리한 5성급 호텔을 각각 2~3개씩 균형있게 추천해주세요.\n- 교통이 편리한 중심가에 위치해야 합니다.`;
 
   const transportationInstructions = travelCountry === Country.KOREA 
     ? `서울에서 ${destination}까지 다음과 같은 교통수단을 고려하여 계획을 세워주세요:
