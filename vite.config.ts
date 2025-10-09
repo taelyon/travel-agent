@@ -1,14 +1,13 @@
 import path from 'path';
 import { defineConfig, type Plugin, type PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
-import { handleJapanTravelAction } from './server/japanTravelService';
 
-function devJapanTravelApiPlugin(): Plugin {
+function devTravelApiPlugin(handleTravelAction: (action: any, payload: any) => Promise<any>): Plugin {
   return {
-    name: 'dev-japan-travel-api',
+    name: 'dev-travel-api',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        if (!req.url?.startsWith('/api/japan-travel')) {
+        if (!req.url?.startsWith('/api/travel')) {
           next();
           return;
         }
@@ -39,7 +38,7 @@ function devJapanTravelApiPlugin(): Plugin {
           try {
             const parsedBody = rawBody ? JSON.parse(rawBody) : {};
             const { action, payload } = parsedBody;
-            const result = await handleJapanTravelAction(action, payload);
+            const result = await handleTravelAction(action, payload);
             res.statusCode = result.status;
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify(result.body));
@@ -75,11 +74,12 @@ function devJapanTravelApiPlugin(): Plugin {
   };
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
   const plugins: PluginOption[] = [react()];
 
   if (mode === 'development') {
-    plugins.push(devJapanTravelApiPlugin());
+    const { handleTravelAction } = await import('./server/travelService');
+    plugins.push(devTravelApiPlugin(handleTravelAction));
   }
 
   return {
