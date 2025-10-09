@@ -238,7 +238,7 @@ export async function handleTravelAction(action: string, payload: any, stream?: 
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const modelName = process.env.GENERATIVE_MODEL || 'gemini-2.5-pro';
+    const modelName = process.env.GENERATIVE_MODEL || 'gemini-2.5-flash';
 
     const model = genAI.getGenerativeModel({
       model: modelName,
