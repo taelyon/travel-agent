@@ -171,7 +171,9 @@ async function generatePlanStream(model: ReturnType<GoogleGenerativeAI['getGener
             8.  **교통편:** 각 일정(schedule) 항목마다 이동을 위한 구체적인 교통편 정보(예: 지하철 노선, 버스 번호, 도보 등), 예상 소요 시간, 예상 요금을 'transportation' 필드에 상세히 작성해주세요.
             9.  **일정 내용:** 각 활동 및 방문 장소에 대한 구체적인 설명, 예상 소요 시간, 팁 등을 **다섯 문장 이상**으로 아주 상세하게 작성해주세요.
             10. **동선:** 논리적이고 효율적인 동선으로 일정을 계획하고, 모든 필수 방문 장소를 포함해야 합니다.
-            11. **출력 형식:** 결과는 다른 설명이나 markdown 포맷 없이, 아래와 같은 순수한 JSON 형식으로만 반환해주세요.
+            11. **교통편 가이드 (transportationGuide):** 출발지와 도착지가 국내(한국) 도시일 경우, 주요 교통수단(KTX, 버스, 자가용, 항공편 등)별 장단점, 예상 소요 시간, 예상 비용을 비교 분석하여 추천 교통수단을 포함한 내용을 **객체 배열**로 구조화해주세요. 각 객체는 method(교통수단 이름), pros(장점), cons(단점), duration(소요시간), cost(비용), recommended(추천 여부, boolean) 필드를 포함해야 합니다. 국제선일 경우, 이 필드는 null로 설정해주세요.
+
+            12. **출력 형식:** 결과는 다른 설명이나 markdown 포맷 없이, 아래와 같은 순수한 JSON 형식으로만 반환해주세요.
 
             **JSON 출력 형식 예시:**
             {
@@ -192,7 +194,16 @@ async function generatePlanStream(model: ReturnType<GoogleGenerativeAI['getGener
                 ]
               }],
               "hotelRecommendations": [{ "name": "시티 센터 호텔", "area": "중심가", "priceRange": "15만원 ~ 25만원", "rating": 4.5, "notes": "주요 역과 직접 연결되어 교통이 매우 편리하며, 쇼핑과 관광에 최적의 위치를 자랑합니다." }],
-              "transportationGuide": "이 여행에서는 대중교통 패스를 활용하는 것이 좋습니다. 시내에서는 패스로 대부분의 지하철과 버스를 무제한 이용할 수 있으며, 근교 이동 시에도 유용합니다. 각 패스의 가격, 구매처, 사용 가능 노선 등 상세 정보는 여행 전 미리 확인하는 것을 추천합니다.",
+              "transportationGuide": [
+                {
+                  "method": "KTX/SRT",
+                  "pros": "가장 빠르고 정시성이 높으며, 서울 주요 거점에서 출발하여 부산역 도착 후 대중교통 연계가 매우 편리합니다.",
+                  "cons": "다른 교통수단에 비해 비용이 높은 편이며, 주말이나 명절에는 사전 예매가 필수적입니다.",
+                  "duration": "약 2시간 30분 ~ 3시간",
+                  "cost": "약 59,800원 (편도, 일반실 기준)",
+                  "recommended": true
+                }
+              ],
               "restaurantRecommendations": [{ "name": "중앙 시장 맛집", "area": "중앙 시장", "rating": 4.4, "notes": "현지인들이 즐겨 찾는 신선한 해산물 요리 전문점입니다. 항상 대기 줄이 길 수 있으니 식사 시간을 피해 방문하는 것이 좋습니다." }]
             }
         `;

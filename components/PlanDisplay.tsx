@@ -189,9 +189,48 @@ const PlanDisplay: React.FC<PlanDisplayProps> = ({ plan, startDate, endDate, cou
              <IconMap.Transport className="w-7 h-7 sm:w-8 sm:h-8 text-rose-500" />
             교통편 가이드
           </h2>
-          <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{plan.transportationGuide}</p>
+          <TransportationGuide guide={plan.transportationGuide} />
       </section>
       
+    </div>
+  );
+};
+
+const TransportationGuide: React.FC<{ guide: TravelPlan['transportationGuide'] }> = ({ guide }) => {
+  if (!guide) return null;
+
+  if (typeof guide === 'string') {
+    return <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{guide}</p>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {guide.map((item, index) => (
+        <div key={index} className={`p-4 rounded-lg border-2 ${item.recommended ? 'border-rose-500 bg-rose-50' : 'border-gray-200 bg-white'}`}>
+          <h3 className="text-xl font-bold text-gray-800 flex items-center">
+            {item.method}
+            {item.recommended && <span className="ml-3 text-sm font-semibold text-white bg-rose-500 px-2 py-0.5 rounded-full">추천</span>}
+          </h3>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded-r-lg">
+              <h4 className="font-semibold text-green-800">👍 장점</h4>
+              <p className="text-green-700 mt-1">{item.pros}</p>
+            </div>
+            <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded-r-lg">
+              <h4 className="font-semibold text-red-800">👎 단점</h4>
+              <p className="text-red-700 mt-1">{item.cons}</p>
+            </div>
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-r-lg">
+              <h4 className="font-semibold text-blue-800">🕒 소요시간</h4>
+              <p className="text-blue-700 mt-1">{item.duration}</p>
+            </div>
+            <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded-r-lg">
+              <h4 className="font-semibold text-yellow-800">💰 비용</h4>
+              <p className="text-yellow-700 mt-1">{item.cost}</p>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

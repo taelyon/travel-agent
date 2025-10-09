@@ -43,13 +43,22 @@ export interface HotelRecommendation extends Recommendation {
     priceRange: string;
 }
 
+export interface TransportationGuideItem {
+  method: string;
+  pros: string;
+  cons: string;
+  duration: string;
+  cost: string;
+  recommended: boolean;
+}
+
 export interface TravelPlan {
   tripTitle: string;
   tripOverview: string;
   estimatedCost: string;
   dailyItinerary: DailyPlan[];
   hotelRecommendations: HotelRecommendation[];
-  transportationGuide: string;
+  transportationGuide: TransportationGuideItem[] | string | null;
   restaurantRecommendations: Recommendation[];
 }
 
