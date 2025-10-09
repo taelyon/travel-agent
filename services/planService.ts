@@ -1,6 +1,6 @@
 import type { SavedPlan } from '../types';
 
-const API_BASE_URL = '/api/japan-travel';
+const API_BASE_URL = '/api/travel';
 
 async function fetchFromApi(action: string, payload?: any) {
   try {
